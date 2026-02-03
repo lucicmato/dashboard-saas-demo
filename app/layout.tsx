@@ -10,6 +10,7 @@ import { Inter } from 'next/font/google';
 
 import './globals.css';
 
+//TODO: Make it to work dynamic with ThemeProvider
 const inter = Inter({
   subsets: ['latin'],
 });
@@ -25,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light" style={{ colorScheme: 'light' }}>
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider>
           <Navbar />
