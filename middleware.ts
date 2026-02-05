@@ -1,18 +1,41 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@/utils/supabase/client';
 
-export function middleware(req: NextRequest) {
-  console.log('uso middleware');
+export async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   const accessToken = req.cookies.get('sb-access-token')?.value;
 
   console.log('Middleware triggered for path:', pathname);
   console.log('accessToken', accessToken);
 
-  // Refresh session logic (example: check token validity)
+  const supabase = createClient();
+
   if (accessToken) {
-    // Optionally, validate or refresh the token here
-    // For example, call Supabase's `auth.getUser()` or similar
+    try {
+      // Validate the session
+      const { data: session, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.log('Session validation error:', error.message);
+
+        // Attempt to refresh the session
+        const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession();
+
+        if (refreshError) {
+          console.log('Session refresh failed:', refreshError.message);
+          const redirectUrl = new URL('/login', req.url);
+          redirectUrl.searchParams.set('next', pathname + searchParams.toString());
+          return NextResponse.redirect(redirectUrl);
+        }
+
+        console.log('Session refreshed successfully:', refreshedSession);
+      } else {
+        console.log('Session is valid:', session);
+      }
+    } catch (err) {
+      console.error('Unexpected error during session handling:', err);
+    }
   }
 
   // Protect `/dashboard/*` routes
